@@ -11,13 +11,7 @@ Array.prototype.windowed = function (size) {
 Array.prototype.count = function (predicate) {
     return this.filter(predicate).length
 }
+const sum = (array) => array.reduce((a, b) => a + b, 0)
 
-const part1Result = depths.count((depth, index, array) => depth > array[index - 1])
-console.log("part 1:", part1Result);
-
-const part2Result =
-    depths.windowed(3)
-        .map(s => s.reduce((a, b) => a + b))
-        .count((depth, index, array) => depth > array[index - 1])
-
-console.log("part 2:", part2Result);
+console.log("part 1:", depths.windowed(2).count(([a, b]) => a < b));
+console.log("part 2:", depths.windowed(3).map(sum).windowed(2).count(([a, b]) => a < b));

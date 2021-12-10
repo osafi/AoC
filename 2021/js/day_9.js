@@ -1,51 +1,84 @@
+Array.prototype.product = function () {
+    return this.reduce((acc, val) => acc * val, 1);
+}
 Array.prototype.sorted = function (compareFn) {
     let tmp = [...this];
     tmp.sort(compareFn);
     return tmp;
 }
-
-String.prototype.numberOfLettersInCommon = function (other) {
-    const otherAsSet = new Set([...other]);
-    return new Set([...this].filter(x => otherAsSet.has(x))).size;
+Array.prototype.transpose = function () {
+    return this[0].map((_, colIndex) => this.map(row => row[colIndex]));
 }
 
-Array.prototype.sum = function () {
-    return this.reduce((acc, val) => acc + val, 0);
+function toIntMatrix(input) {
+    return input.split("\n").map(s => s.split("").map(s => +s)).transpose()
 }
 
-const knownSegmentsRegex = /\b(\w{2})\b|\b(\w{3})\b|\b(\w{4})\b|\b(\w{7})\b/g
+Array.prototype.matrixIterator = function* () {
+    for (let x = 0; x < this.length; x++) {
+        for (let y = 0; y < this[x].length; y++) {
+            const value = this[x][y];
+            yield [value, x, y];
+        }
+    }
+}
+
+function neighbors(matrix, x, y, outOfBoundsValue = Number.MAX_SAFE_INTEGER) {
+    return {
+        above: matrix[x][y - 1] ?? outOfBoundsValue,
+        below: matrix[x][y + 1] ?? outOfBoundsValue,
+        left: matrix[x - 1] ? matrix[x - 1][y] : outOfBoundsValue,
+        right: matrix[x + 1] ? matrix[x + 1][y] : outOfBoundsValue,
+    };
+}
+
+const isLowPoint = (value, neighbors) => Object.values(neighbors).every(neighbor => value < neighbor);
+
+function findLowPoints(map) {
+    const lowCoords = []
+    for (let [value, x, y] of map.matrixIterator()) {
+        if (isLowPoint(value, neighbors(map, x, y))) lowCoords.push([x, y]);
+    }
+    return lowCoords;
+}
 
 function part1(input) {
-    return input.split("\n")
-        .map(l => l.split("|")[1])
-        .join(" ")
-        .match(knownSegmentsRegex)
-        .length
+    const map = toIntMatrix(input);
+    return findLowPoints(map).reduce((acc, [x, y]) => acc + map[x][y] + 1, 0)
+}
+
+Array.prototype.includesArray = function (otherArray) {
+    return this.some((arr) => {
+        if (arr.length !== otherArray.length) return false;
+        return arr.every((value, i) => value === otherArray[i])
+    })
+}
+
+function findBasin(map, x, y, basin = []) {
+    basin.push([x, y]);
+    const {above, below, left, right} = neighbors(map, x, y);
+    if (above < 9 && !basin.includesArray([x, y - 1])) {
+        findBasin(map, x, y - 1, basin);
+    }
+    if (below < 9 && !basin.includesArray([x, y + 1])) {
+        findBasin(map, x, y + 1, basin);
+    }
+    if (left < 9 && !basin.includesArray([x - 1, y])) {
+        findBasin(map, x - 1, y, basin);
+    }
+    if (right < 9 && !basin.includesArray([x + 1, y])) {
+        findBasin(map, x + 1, y, basin);
+    }
+    return basin;
 }
 
 function part2(input) {
-    const lines = input.split("\n")
-
-    return lines.map(l => {
-        const [patternText, outputText] = l.split("|")
-
-        const [one, seven, four, eight] = patternText.match(knownSegmentsRegex).sorted((a, b) => a.length - b.length)
-
-        const zeroSixOrNinePatterns = patternText.split(" ").filter(s => s.length === 6);
-        const nine = zeroSixOrNinePatterns.find(p => p.numberOfLettersInCommon(four) === 4);
-        const zero = zeroSixOrNinePatterns.filter(p => p !== nine).find(p => p.numberOfLettersInCommon(seven) === 3);
-        const six = zeroSixOrNinePatterns.filter(p => p !== nine && p !== zero)[0];
-
-
-        const twoThreeOrFivePatterns = patternText.split(" ").filter(s => s.length === 5);
-        const five = twoThreeOrFivePatterns.find(p => p.numberOfLettersInCommon(six) === 5);
-        const three = twoThreeOrFivePatterns.filter(p => p !== five).find(p => p.numberOfLettersInCommon(four) === 3);
-        const two = twoThreeOrFivePatterns.filter(p => p !== five && p !== three)[0];
-
-        const patterns = [zero, one, two, three, four, five, six, seven, eight, nine];
-
-        return parseInt(outputText.trim().split(" ").map(p => patterns.findIndex(p2 => p.length === p2.length && p.numberOfLettersInCommon(p2) === p.length)).join(""));
-    }).sum();
+    const map = toIntMatrix(input);
+    const lowPoints = findLowPoints(map);
+    return lowPoints.map(([x, y]) => findBasin(map, x, y).length)
+        .sorted((a, b) => b - a)
+        .slice(0, 3)
+        .product();
 }
 
 module.exports = {part1, part2};

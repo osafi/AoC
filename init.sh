@@ -5,6 +5,9 @@ YEAR=$1
 DAY=$2
 SESSION=${AOC_SESSION}
 
+mkdir -p ./${YEAR}/inputs
+mkdir -p ./${YEAR}/js
+
 if [ ! -f ./${YEAR}/inputs/day_${DAY}.txt ]; then
   echo "Downloading input for year ${YEAR} day ${DAY}"
   curl -s -H "Cookie: session=${AOC_SESSION}" "https://adventofcode.com/${YEAR}/day/${DAY}/input" -o ./${YEAR}/inputs/day_${DAY}.txt

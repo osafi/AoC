@@ -10,7 +10,7 @@ mkdir -p ./${YEAR}/js
 
 if [ ! -f ./${YEAR}/inputs/day_${DAY}.txt ]; then
   echo "Downloading input for year ${YEAR} day ${DAY}"
-  curl -s -H "Cookie: session=${AOC_SESSION}" "https://adventofcode.com/${YEAR}/day/${DAY}/input" -o ./${YEAR}/inputs/day_${DAY}.txt
+  curl -s -H "Cookie: session=${AOC_SESSION}" -H "User-Agent: https://github.com/osafi/AoC/blob/main/init.sh by omeed@safi.ms" "https://adventofcode.com/${YEAR}/day/${DAY}/input" -o ./${YEAR}/inputs/day_${DAY}.txt
 else
   echo "Input for year ${YEAR} day ${DAY} already exists. Skipping download"
 fi
